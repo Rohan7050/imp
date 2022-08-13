@@ -1,0 +1,106 @@
+postgreSQL
+
+SQL - Structured Query Language
+
+- sql manage data in relational database
+- very pawerful
+- 1974
+
+store data in table format(row, column)
+
+postgreSQL
+- Object-relational database management system
+- morden
+- open Source
+
+// apps //
+pgAdmin4
+SQL shell
+///////////
+
+
+Ways to connect to the database
+- connect using client
+- GUI clien (DataGrip)
+- Terminal / CMD
+- Application
+
+
+You are using psql, the command-line interface to PostgreSQL.
+Type:  \copyright for distribution terms
+       \h for help with SQL commands
+       \? for help with psql commands
+       \g or terminate with semicolon to execute query
+       \q to quit
+
+
+//// DB commands
+
+// create a new database
+CREATE DATABASE <name>;
+
+// delete a database (very imp (use carefully))
+DROP DATABASE <name>;
+
+
+CREATE TABLE person(
+       id INT,
+       first_name VARCHAR(50),
+       last_name VARCHAR(50),
+       gender VARCHAR(9),
+       dat_of_birth DATE 
+);
+
+// show the person information
+\d person 
+
+// drop table
+DROP TABLE <name>;
+
+// create a new table and add contrains to it
+CREATE TABLE person(
+       id BIGSERIAL NOT NULL PRIMARY KEY,
+       first_name VARCHAR(50) NOT NULL,
+       last_name VARCHAR(50) NOT NULL,
+       gender VARCHAR(9) NOT NULL,
+       dat_of_birth DATE NOT NULL,
+       email VARCHAR(150)
+);
+
+// insert into TABLE (always use single quats)
+INSERT INTO person (first_name,last_name,gender,dat_of_birth,email)
+VALUES('Rohan', 'Pagare', 'Male', '1999-05-07');
+
+
+// SELECT
+
+// select all
+SELECT * FROM <table>;
+
+// select in ascending order
+// SELECT * FROM <table> ORDER BY <feild> ASC;
+
+// select in descending order
+SELECT * FROM <table> ORDER BY <feild> DESC;
+
+// compound sorting
+SELECT * FROM <table> ORDER BY <feild>, <feild> DESC;
+
+// select distint elements
+SELECT DISTINCT <feild> FROM person ORDER BY <feild> ASC;
+
+// select all by query
+SELECT * FROM <table> WHERE <feild> = 'value';
+
+// select comparision
+<
+>
+<=
+>=
+<> not eql (strict)
+
+// limit 
+SELECT * FROM <table> LIMIT 10;
+
+// offset (skip)
+SELECT * FROM <table> OFFSET 5 LIMIT 10;
