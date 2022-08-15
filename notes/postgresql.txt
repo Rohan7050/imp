@@ -104,3 +104,346 @@ SELECT * FROM <table> LIMIT 10;
 
 // offset (skip)
 SELECT * FROM <table> OFFSET 5 LIMIT 10;
+
+// OR
+SELECT * FROM person WHERE contry_of_birth = 'China' OR contry_of_birth = 'France';
+
+// IN
+// SELECT * FROM person WHERE contry_of_birth IN ('China', 'Brazil', 'France');
+
+// BETWEEN
+SELECT * FROM person WHERE date_of_birth BETWEEN DATE '2019-01-01' AND '2021-12-30';
+
+// LIKE
+SELECT * FROM person WHERE email LIKE '%@google.com';
+
+//GROUP BY
+SELECT <feild>, COUNT(*) FROM person GROUP BY <feild>; 
+
+// HAVING
+SELECT <feild1>, COUNT(*) FROM person GROUP BY <feild1> HAVING COUNT(*) > 5; 
+
+// MAX
+SELECT MAX(<feild>) FROM <table>;
+
+// MIN
+SELECT MIN(<feild>) FROM <table>;
+
+// AVG
+SELECT AVG(<feild>) FROM <table>;
+
+// ROUND
+SELECT ROUND(AVG(<feild>)) FROM <table>;
+
+// SUM
+SELECT SUM(<feild>) FROM <table>;
+
+// agg using sum
+SELECT make, SUM(price) FROM car GROUP BY make ORDER BY sum DESC;
+
+// alias( AS )
+SELECT make, model, price AS original_price, ROUND(price * .10, 2) AS ten_persent FROM car;
+
+// COALESCE (use to give default value if value in colunm is not present or null)
+SELECT COALESCE(eamil, 'EMAIL not provided') FROM person;
+
+// NULLIF
+SELECt NULLIF(1, 1) AS value;
+ value
+-------
+
+SELECt NULLIF(10, 1) AS value;
+ value
+-------
+   10
+
+// NOW
+SELECT NOW();
+               now
+----------------------------------
+2022-08-14 18:29:01.050253+05:30
+
+SELECT NOW()::DATE;
+    now
+------------
+ 2022-08-14
+(1 row)
+
+SELECT NOW()::TIME;
+       now
+-----------------
+ 18:29:31.745922
+
+SELECT NOW() + INTERVAL '1 YEARS';
+            ?column?
+---------------------------------
+ 2023-08-14 18:37:17.42757+05:30
+(1 row)
+
+SELECT NOW() - INTERVAL '1 YEARS';
+             ?column?
+----------------------------------
+ 2021-08-14 18:37:22.929928+05:30
+
+SELECT EXTRACT(YEAR FROM NOW());
+ extract
+---------
+    2022
+
+// AGE
+SELECT first_name, last_name, email, date_of_birth, AGE(NOW(), date_of_birth) FROM person;
+
+// DROP contrains
+ALTER TABLE person DROP CONSTRAINT <feild>;
+
+// ADD PRIMARY KEY
+ALTER TABLE person ADD PRIMARY KEY (<feild>);
+
+// ADD UNIQUE CONSTRAINT
+ALTER TABLE person ADD CONSTRAINT unique_email_address UNIQUE (email);
+
+// ADD CONSTRAINT(emun)
+ALTER TABLE person ADD CONSTRAINT gender_constaint CHECH (gender = 'Male' OR gender = 'Female');
+
+// DELETE 
+DELETE FROM person WHERE name = 'John';
+
+
+
+
+
+/////////  typeORM
+
+// Embedded Entities
+There is an amazing way to reduce duplication in your app (using composition over inheritance) by using embedded columns. 
+Embedded column is a column which accepts a class with its own columns and merges those columns into the current entity's database table. 
+//////////////////
+import { Column } from "typeorm"
+
+export class Name {
+    @Column()
+    first: string
+
+    @Column()
+    last: string
+}
+///////////////////////
+Then you can "connect" those columns in your entities:
+///////////////////////////
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
+import { Name } from "./Name"
+
+@Entity()
+export class User {
+    @PrimaryGeneratedColumn()
+    id: string
+
+    @Column(() => Name)
+    name: Name
+
+    @Column()
+    isActive: boolean
+}
+///////////////////////////////
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
+import { Name } from "./Name"
+
+@Entity()
+export class Employee {
+    @PrimaryGeneratedColumn()
+    id: string
+
+    @Column(() => Name)
+    name: Name
+
+    @Column()
+    salary: number
+}
+///////////////////////
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
+import { Name } from "./Name"
+
+@Entity()
+export class Student {
+    @PrimaryGeneratedColumn()
+    id: string
+
+    @Column(() => Name)
+    name: Name
+
+    @Column()
+    faculty: string
+}
+///////////////////////
+
+/// inheritance Entities
+
+As you can see all those entities have common columns: id, title, description. To reduce duplication and produce a 
+better abstraction we can create a base class called Content for them:
+
+//////////////////////////
+export abstract class Content {
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
+    title: string
+
+    @Column()
+    description: string
+}
+/////////////////////////
+
+@Entity()
+export class Photo extends Content {
+    @Column()
+    size: string
+}
+
+/////////////////
+@Entity()
+export class Question extends Content {
+    @Column()
+    answersCount: number
+}
+
+///////////////////
+@Entity()
+export class Post extends Content {
+    @Column()
+    viewCount: number
+}
+
+/////////////////
+
+Relations helps you to work with related entities easily. There are several types of relations:
+
+one-to-one using @OneToOne
+many-to-one using @ManyToOne
+one-to-many using @OneToMany
+many-to-many using @ManyToMany
+
+/////// One-to-one relations
+One-to-one is a relation where A contains only one instance of B, and B contains only one instance of A. 
+Let's take for example User and Profile entities. User can have only a single profile, and a single profile is owned by only a single user.
+
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
+
+@Entity()
+export class Profile {
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
+    gender: string
+
+    @Column()
+    photo: string
+}
+
+///////////////////
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    OneToOne,
+    JoinColumn,
+} from "typeorm"
+import { Profile } from "./Profile"
+
+@Entity()
+export class User {
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
+    name: string
+
+    @OneToOne(() => Profile)
+    @JoinColumn()
+    profile: Profile
+}
+Here we added @OneToOne to the profile and specify the target relation type to be Profile. 
+We also added @JoinColumn which is required and must be set only on one side of the relation. 
+The side you set @JoinColumn on, that side's table will contain a "relation id" and foreign keys to target entity table.
+
+/////////////////////Many-to-one / one-to-many relations
+Many-to-one / one-to-many is a relation where A contains multiple instances of B, 
+but B contains only one instance of A. Let's take for example User and Photo entities. 
+User can have multiple photos, but each photo is owned by only one single user.
+
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm"
+import { User } from "./User"
+
+@Entity()
+export class Photo {
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
+    url: string
+
+    @ManyToOne(() => User, (user) => user.photos)
+    user: User
+}
+///////////////////////////////
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm"
+import { Photo } from "./Photo"
+
+@Entity()
+export class User {
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
+    name: string
+
+    @OneToMany(() => Photo, (photo) => photo.user)
+    photos: Photo[]
+}
+Here we added @OneToMany to the photos property and specified the target relation type to be Photo. 
+You can omit @JoinColumn in a @ManyToOne / @OneToMany relation. @OneToMany cannot exist without @ManyToOne. 
+If you want to use @OneToMany, @ManyToOne is required. However, the inverse is not required: 
+If you only care about the @ManyToOne relationship, you can define it without having @OneToMany on the related entity. 
+Where you set @ManyToOne - its related entity will have "relation id" and foreign key.
+
+//////////////////// many-to-many relations
+Many-to-many is a relation where A contains multiple instances of B, and B contain multiple instances of A. Let's take for example Question and Category entities. A question can have multiple categories, and each category can have multiple questions.
+
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm"
+
+@Entity()
+export class Category {
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
+    name: string
+}
+////////////////////////
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    ManyToMany,
+    JoinTable,
+} from "typeorm"
+import { Category } from "./Category"
+
+@Entity()
+export class Question {
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
+    title: string
+
+    @Column()
+    text: string
+
+    @ManyToMany(() => Category)
+    @JoinTable()
+    categories: Category[]
+}
+
+@JoinTable() is required for @ManyToMany relations. You must put @JoinTable on one (owning) side of relation.
